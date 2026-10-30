@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.vercel/
+*.log
+.DS_Store
+cls
+del
+npm
+pm
+react-example@0.0.0
+rmdir
+vite

@@ -1,0 +1,6 @@
+{
+  "name": "ترم‌یار | TermYar - دستیار دانشگاهی و بازارچه خوابگاهی",
+  "description": "سامانه مدیریت ترم دانشجویی، برنامه هفتگی، تایمر مطالعه و بازارچه اجاره و خرید و فروش اقلام خوابگاهی و دانشگاهی",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
