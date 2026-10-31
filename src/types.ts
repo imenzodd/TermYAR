@@ -103,3 +103,126 @@ export interface UserProfile {
   roomNumber: string;
   avatar: string;
 }
+
+// ==========================================
+// MODULE 1: Academic Resources & Notes Library
+// ==========================================
+
+export type ResourceFileType = 'pdf' | 'docx' | 'pptx' | 'xlsx' | 'image' | 'other';
+export type ResourceVisibility = 'private' | 'link' | 'public';
+
+export interface ResourceNote {
+  id: string;
+  resourceId: string;
+  pageNumber: number;
+  content: string;
+  author: string;
+  createdAt: string;
+  color?: 'yellow' | 'green' | 'blue' | 'pink' | 'purple';
+}
+
+export interface AcademicResource {
+  id: string;
+  title: string;
+  fileName: string;
+  fileType: ResourceFileType;
+  mimeType: string;
+  fileSize: number; // in bytes
+  fileSizeFormatted: string; // e.g. "2.4 MB"
+  uploadDate: string; // YYYY-MM-DD
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  description: string;
+  tags: string[];
+  folder?: string;
+  ownerName: string;
+  isFavorite: boolean;
+  visibility: ResourceVisibility;
+  shareToken: string;
+  downloadAllowed: boolean;
+  pageCount?: number;
+  // File payload: stored as base64 data URL or blob URL
+  fileDataUrl?: string;
+  // Text preview or mock page content for rich in-app rendering
+  samplePages?: { pageNumber: number; title: string; text: string; diagramType?: string }[];
+}
+
+export interface ResourceFolder {
+  id: string;
+  name: string;
+  nameFa: string;
+  courseId?: string;
+  color: string;
+}
+
+// ==========================================
+// MODULE 2: Intelligent Semester Health Score
+// ==========================================
+
+export type AcademicHealthStatus = 'excellent' | 'good' | 'needs_attention' | 'at_risk';
+
+export interface IndicatorDetail {
+  id: 'assignment' | 'exam' | 'study_goal' | 'course_progress';
+  name: string;
+  nameFa: string;
+  originalWeight: number; // e.g. 0.25 (25%)
+  normalizedWeight: number; // adjusted if other metrics missing
+  score: number; // 0 - 100
+  isAvailable: boolean;
+  missingReason?: string;
+  missingReasonFa?: string;
+  metricLabel: string;
+  metricLabelFa: string;
+  summary: string;
+  summaryFa: string;
+  status: 'good' | 'warning' | 'danger';
+}
+
+export interface ScoreRecommendation {
+  id: string;
+  indicatorId: 'assignment' | 'exam' | 'study_goal' | 'course_progress';
+  title: string;
+  titleFa: string;
+  description: string;
+  descriptionFa: string;
+  impactPts: number;
+  priority: 'high' | 'medium' | 'low';
+  actionLabel: string;
+  actionLabelFa: string;
+  actionTab?: string;
+}
+
+export interface ScoreSnapshot {
+  week: number;
+  weekLabel: string;
+  weekLabelFa: string;
+  date: string;
+  score: number;
+  status: AcademicHealthStatus;
+}
+
+export interface SemesterHealthScoreData {
+  overallScore: number; // 0 - 100
+  status: AcademicHealthStatus;
+  statusLabel: string;
+  statusLabelFa: string;
+  statusDescription: string;
+  statusDescriptionFa: string;
+  indicators: {
+    assignment: IndicatorDetail;
+    exam: IndicatorDetail;
+    studyGoal: IndicatorDetail;
+    courseProgress: IndicatorDetail;
+  };
+  hasMissingData: boolean;
+  activeWeightsSum: number; // e.g. 1.0 or 0.75
+  recommendations: ScoreRecommendation[];
+  historySnapshots: ScoreSnapshot[];
+  weeklyComparison: {
+    diff: number; // e.g. +5 or -3
+    trend: 'up' | 'down' | 'stable';
+    previousScore: number;
+  };
+  weeklyGoalHours: number;
+}

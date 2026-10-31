@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   initialCourses,
   initialMarketItems,
@@ -6,7 +6,18 @@ import {
   initialProfile,
   initialTasks,
 } from './data/initialData';
-import { Course, CourseSchedule, MarketItem, NeedRequest, StudyLog, Task, TaskType, UserProfile } from './types';
+import {
+  AcademicResource,
+  Course,
+  CourseSchedule,
+  MarketItem,
+  NeedRequest,
+  ResourceNote,
+  StudyLog,
+  Task,
+  TaskType,
+  UserProfile,
+} from './types';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
@@ -18,11 +29,23 @@ import { TasksView } from './components/TasksView';
 import { FocusTimerView } from './components/FocusTimerView';
 import { FavoritesView } from './components/FavoritesView';
 import { SettingsView } from './components/SettingsView';
+import { AcademicResourcesView } from './components/AcademicResourcesView';
+import { PdfViewerModal } from './components/PdfViewerModal';
+import { UploadResourceModal } from './components/UploadResourceModal';
+import { SemesterHealthScoreModal } from './components/SemesterHealthScoreModal';
+import { SemesterHealthScoreCard } from './components/SemesterHealthScoreCard';
 import { MonetizationPitchModal } from './components/MonetizationPitchModal';
 import { NewTaskModal } from './components/NewTaskModal';
 import { NewMarketItemModal } from './components/NewMarketItemModal';
 import { NewNeedRequestModal } from './components/NewNeedRequestModal';
 import { ProfileModal } from './components/ProfileModal';
+import {
+  loadAllResources,
+  saveResourceToVault,
+  deleteResourceFromVault,
+  loadResourceNotes,
+} from './utils/resourceStorage';
+import { calculateSemesterHealthScore } from './utils/healthScoreCalculator';
 
 export default function App() {
   // Language state (default 'en' matching the mockup screenshot, toggleable to 'fa')
@@ -133,9 +156,65 @@ export default function App() {
     localStorage.setItem('ty_study_v6', JSON.stringify(studyLogs));
   }, [studyLogs]);
 
+  // Academic Resources Vault & Notes state
+  const [resources, setResources] = useState<AcademicResource[]>([]);
+  const [notes, setNotes] = useState<ResourceNote[]>([]);
+  const [selectedViewerResource, setSelectedViewerResource] = useState<AcademicResource | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
+  const [weeklyGoalHours, setWeeklyGoalHours] = useState<number>(() => {
+    const saved = localStorage.getItem('ty_goal_hours');
+    return saved ? parseInt(saved, 10) : 15;
+  });
+
   useEffect(() => {
-    localStorage.setItem('ty_favs_v6', JSON.stringify(favoriteIds));
-  }, [favoriteIds]);
+    localStorage.setItem('ty_goal_hours', String(weeklyGoalHours));
+  }, [weeklyGoalHours]);
+
+  // Load vault resources and notes on mount
+  useEffect(() => {
+    loadAllResources().then(setResources);
+    loadResourceNotes().then(setNotes);
+  }, []);
+
+  const handleRefreshNotes = () => {
+    loadResourceNotes().then(setNotes);
+  };
+
+  const handleToggleFavoriteResource = async (id: string) => {
+    setResources((prev) => {
+      const updated = prev.map((r) => (r.id === id ? { ...r, isFavorite: !r.isFavorite } : r));
+      const target = updated.find((r) => r.id === id);
+      if (target) saveResourceToVault(target);
+      return updated;
+    });
+  };
+
+  const handleDeleteResource = async (id: string) => {
+    await deleteResourceFromVault(id);
+    setResources((prev) => prev.filter((r) => r.id !== id));
+    if (selectedViewerResource?.id === id) {
+      setSelectedViewerResource(null);
+    }
+  };
+
+  const handleAddResource = async (newResource: AcademicResource) => {
+    await saveResourceToVault(newResource);
+    setResources((prev) => [newResource, ...prev.filter((r) => r.id !== newResource.id)]);
+  };
+
+  const handleUpdateResource = async (updatedResource: AcademicResource) => {
+    await saveResourceToVault(updatedResource);
+    setResources((prev) => prev.map((r) => (r.id === updatedResource.id ? updatedResource : r)));
+    if (selectedViewerResource?.id === updatedResource.id) {
+      setSelectedViewerResource(updatedResource);
+    }
+  };
+
+  // Deterministic Semester Health Score calculation
+  const healthData = useMemo(() => {
+    return calculateSemesterHealthScore(tasks, courses, studyLogs, weeklyGoalHours, lang);
+  }, [tasks, courses, studyLogs, weeklyGoalHours, lang]);
 
   // Favorite toggle handler
   const handleToggleFavorite = (id: string) => {
@@ -279,8 +358,14 @@ export default function App() {
               marketItems={marketItems}
               needRequests={needRequests}
               lang={lang}
+              healthData={healthData}
+              onOpenHealthModal={() => setIsHealthModalOpen(true)}
               onToggleTask={handleToggleTask}
               onNavigateTab={(tab) => {
+                if (tab === 'health_score') {
+                  setIsHealthModalOpen(true);
+                  return;
+                }
                 setActiveTab(tab);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
@@ -288,6 +373,30 @@ export default function App() {
               onOpenNewMarketModal={() => setIsNewMarketModalOpen(true)}
               onOpenProfileModal={() => setIsProfileModalOpen(true)}
             />
+          )}
+
+          {activeTab === 'resources' && (
+            <AcademicResourcesView
+              resources={resources}
+              courses={courses}
+              lang={lang}
+              onOpenUploadModal={() => setIsUploadModalOpen(true)}
+              onOpenResourceViewer={(res) => setSelectedViewerResource(res)}
+              onToggleFavorite={handleToggleFavoriteResource}
+              onDeleteResource={handleDeleteResource}
+              onQuickShare={(res) => setSelectedViewerResource(res)}
+            />
+          )}
+
+          {activeTab === 'health_score' && (
+            <div className="space-y-6">
+              <SemesterHealthScoreCard
+                healthData={healthData}
+                lang={lang}
+                onOpenAnalysisModal={() => setIsHealthModalOpen(true)}
+                onNavigateTab={(tab: string) => setActiveTab(tab)}
+              />
+            </div>
           )}
 
           {activeTab === 'marketplace' && (
@@ -419,6 +528,41 @@ export default function App() {
         onClose={() => setIsProfileModalOpen(false)}
         user={user}
         onSaveProfile={setUser}
+      />
+
+      {/* Module 1: PDF & Document Reader with Notes & Sharing */}
+      <PdfViewerModal
+        isOpen={!!selectedViewerResource}
+        onClose={() => setSelectedViewerResource(null)}
+        resource={selectedViewerResource}
+        notes={notes}
+        onRefreshNotes={handleRefreshNotes}
+        onUpdateResource={handleUpdateResource}
+        lang={lang}
+      />
+
+      {/* Module 1: Upload Academic Resource Modal */}
+      <UploadResourceModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        courses={courses}
+        userName={user.name || 'Alex Morgan'}
+        onAddResource={handleAddResource}
+        lang={lang}
+      />
+
+      {/* Module 2: Intelligent Semester Health Score Diagnostics Modal */}
+      <SemesterHealthScoreModal
+        isOpen={isHealthModalOpen}
+        onClose={() => setIsHealthModalOpen(false)}
+        healthData={healthData}
+        lang={lang}
+        onNavigateTab={(tab) => {
+          setIsHealthModalOpen(false);
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onUpdateGoalHours={(hours) => setWeeklyGoalHours(hours)}
       />
     </div>
   );

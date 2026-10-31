@@ -28,7 +28,8 @@ import {
   Feather,
   LineChart,
 } from 'lucide-react';
-import { Course, MarketItem, NeedRequest, Task, UserProfile } from '../types';
+import { Course, MarketItem, NeedRequest, SemesterHealthScoreData, Task, UserProfile } from '../types';
+import { SemesterHealthScoreCard } from './SemesterHealthScoreCard';
 
 interface DashboardViewProps {
   user: UserProfile;
@@ -37,6 +38,8 @@ interface DashboardViewProps {
   marketItems: MarketItem[];
   needRequests: NeedRequest[];
   lang?: 'en' | 'fa';
+  healthData?: SemesterHealthScoreData;
+  onOpenHealthModal?: () => void;
   onToggleTask: (taskId: string) => void;
   onNavigateTab: (tab: string) => void;
   onOpenNewTaskModal: () => void;
@@ -51,6 +54,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   marketItems,
   needRequests,
   lang = 'en',
+  healthData,
+  onOpenHealthModal,
   onToggleTask,
   onNavigateTab,
   onOpenNewTaskModal,
@@ -423,6 +428,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
+      {/* 2.5 Intelligent Semester Health Score Banner Widget */}
+      {healthData && (
+        <SemesterHealthScoreCard
+          healthData={healthData}
+          lang={lang}
+          onOpenAnalysisModal={onOpenHealthModal || (() => {})}
+          onNavigateTab={onNavigateTab}
+        />
+      )}
+
       {/* 3. Row 2: 4 Activity & Quick Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Card 1: Weekly study activity */}
@@ -622,22 +637,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </button>
 
               <button
+                onClick={() => onNavigateTab('resources')}
+                className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors flex flex-col items-start gap-1.5"
+              >
+                <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
+                  {isFa ? 'منابع درسی و جزوات' : 'Academic vault'}
+                </span>
+              </button>
+
+              <button
                 onClick={() => onNavigateTab('marketplace')}
                 className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors flex flex-col items-start gap-1.5"
               >
                 <ShoppingBag className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                  {isFa ? 'بازارچه خوابگاه' : 'Browse marketplace'}
-                </span>
-              </button>
-
-              <button
-                onClick={onOpenNewMarketModal}
-                className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors flex flex-col items-start gap-1.5"
-              >
-                <Plus className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                  {isFa ? 'ثبت آگهی' : 'Publish listing'}
+                  {isFa ? 'بازارچه خوابگاه' : 'Marketplace'}
                 </span>
               </button>
             </div>
