@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Layers,
   Sparkles,
+  BookOpen,
+  Activity,
 } from 'lucide-react';
 import { UserProfile } from '../types';
 
@@ -225,6 +227,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <FileText className="w-4 h-4 text-slate-400" />
                   <span>{isFa ? 'گزارش‌های تحصیلی' : 'Reports'}</span>
                 </button>
+                <button
+                  onClick={() => setActiveTab('health_score')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'health_score'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-medium'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Activity className="w-4 h-4 text-emerald-500" />
+                    <span>{isFa ? 'سلامت ترم (هوشمند)' : 'Semester Health'}</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold">
+                    100
+                  </span>
+                </button>
               </div>
             )}
           </div>
@@ -245,6 +263,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!collapsedSections['resources'] && (
               <div className="mt-1 space-y-0.5">
                 <button
+                  onClick={() => setActiveTab('resources')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'resources'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-medium'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span>{isFa ? 'منابع درسی و جزوات' : 'Academic Resources'}</span>
+                  </div>
+                  <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-medium">
+                    {isFa ? 'کتابخانه' : 'Library'}
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setActiveTab('marketplace')}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                     activeTab === 'marketplace'
@@ -256,7 +291,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <ShoppingBag className="w-4 h-4 text-slate-400" />
                     <span>{isFa ? 'بازارچه اجاره و خرید خوابگاه' : 'Marketplace'}</span>
                   </div>
-                  <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-medium">
+                  <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">
                     {isFa ? 'خوابگاه' : 'Dorm'}
                   </span>
                 </button>
